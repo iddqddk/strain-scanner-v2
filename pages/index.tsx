@@ -1,16 +1,26 @@
 // strain-scanner/pages/index.tsx
 import { useState, useEffect } from 'react';
-import strains from '../data/leafly_strain_data.json';
+import type { GetStaticProps } from 'next';
+import { getStrains } from '@/lib/getStrains';
 
 interface Strain {
   name: string;
   type: string;
-  effects?: any;
-  flavors?: any;
+  effects?: { [key: string]: string };
+  flavors?: string[];
   description?: string;
 }
 
-export default function Home() {
+export const getStaticProps: GetStaticProps = async () => {
+  const strains = getStrains();
+  return {
+    props: {
+      strains,
+    },
+  };
+};
+
+export default function Home({ strains }: { strains: Strain[] }) {
   const [image, setImage] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Strain[]>([]);
@@ -38,9 +48,9 @@ export default function Home() {
 
   const handleSearch = () => {
     const normalizedQuery = query.toLowerCase();
-    const matches = strains.filter((strain: Strain) => {
+    const matches = strains.filter((strain) => {
       const nameMatch = strain.name?.toLowerCase().includes(normalizedQuery);
-      const flavorMatch = Array.isArray(strain.flavors) && strain.flavors.some((f: string) => f.toLowerCase().includes(normalizedQuery));
+      const flavorMatch = Array.isArray(strain.flavors) && strain.flavors.some((f) => f.toLowerCase().includes(normalizedQuery));
       const descriptionMatch = strain.description?.toLowerCase().includes(normalizedQuery);
       return nameMatch || flavorMatch || descriptionMatch;
     });
@@ -68,67 +78,91 @@ export default function Home() {
   };
 
   return (
-    <main className="p-4 space-y-4">
-      <h1 className="text-2xl font-bold">🌿 Plant Scanner Demo</h1>
+    <div className="min-h-screen bg-gradient-to-br from-green-100 to-white text-gray-800 p-4 space-y-6 max-w-xl mx-auto">
+      <h1 className="text-3xl font-bold text-center">🌿 Strain Scanner</h1>
 
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleImage}
-        className="border p-2 rounded"
-      />
+      <div className="bg-white p-4 rounded-xl shadow-md">
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleImage}
+          className="w-full mb-4 text-sm file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+        />
 
-      {image && <img src={image} alt="Plant" className="w-full rounded shadow" />}
+        {image && (
+          <img
+            src={image}
+            alt="Plant preview"
+            className="rounded-xl shadow w-full object-cover mb-4"
+          />
+        )}
 
-      <input
-        type="text"
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        placeholder="Enter strain name, flavor, or description"
-        className="border p-2 w-full rounded"
-      />
-      <button onClick={handleSearch} className="bg-green-600 text-white px-4 py-2 rounded">
-        Search
-      </button>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search strain name or flavor..."
+          className="w-full border p-2 rounded-md mb-2"
+        />
+        <button
+          onClick={handleSearch}
+          className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
+        >
+          Search
+        </button>
+      </div>
 
       <div className="space-y-4">
-        {results.map((strain) => (
-          <div key={strain.name} className="border p-4 rounded shadow">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">{strain.name}</h2>
-              <button onClick={() => toggleFavorite(strain.name)}>
-                {favorites.includes(strain.name) ? '💚' : '🤍'}
-              </button>
-            </div>
-            <p className="text-sm text-gray-500">{strain.type}</p>
-            <p><strong>Flavors:</strong> {Array.isArray(strain.flavors) ? strain.flavors.join(', ') : 'N/A'}</p>
-            <p><strong>Effects:</strong> {Array.isArray(strain.effects) ? strain.effects.join(', ') : 'N/A'}</p>
-            <p className="text-sm italic">{strain.description?.slice(0, 120)}...</p>
+        {results.map((strain, idx) => {
+          try {
+            return (
+              <div key={strain.name + idx} className="bg-white p-4 rounded-xl shadow-md">
+                <div className="flex justify-between items-center mb-2">
+                  <h2 className="text-lg font-semibold">{strain.name || 'Unknown'}</h2>
+                  <button onClick={() => toggleFavorite(strain.name)}>
+                    {favorites.includes(strain.name) ? '💚' : '🤍'}
+                  </button>
+                </div>
+                <p className="text-sm text-gray-500 mb-1">{strain.type || 'Unknown Type'}</p>
+                <p className="text-sm"><strong>Flavors:</strong> {Array.isArray(strain.flavors) ? strain.flavors.join(', ') : 'N/A'}</p>
+                <p className="text-sm"><strong>Effects:</strong> {
+                  strain.effects
+                    ? Object.entries(strain.effects).map(([effect, value]) => `${effect} (${value})`).join(', ')
+                    : 'N/A'
+                }</p>
+                <p className="text-sm italic mt-1">{strain.description?.slice(0, 120) || 'No description available.'}</p>
 
-            <div className="mt-2">
-              <label className="block text-sm font-medium">Your Comment:</label>
-              <textarea
-                value={comments[strain.name] || ''}
-                onChange={(e) => handleComment(strain.name, e.target.value)}
-                className="w-full border rounded p-1"
-              />
-            </div>
+                <div className="mt-2">
+                  <textarea
+                    value={comments[strain.name] || ''}
+                    onChange={(e) => handleComment(strain.name, e.target.value)}
+                    placeholder="Write your comment..."
+                    className="w-full border p-1 rounded text-sm mt-2"
+                  />
+                </div>
 
-            <div className="mt-2">
-              <label className="block text-sm font-medium">Your Rating:</label>
-              {[1,2,3,4,5].map(n => (
-                <button
-                  key={n}
-                  onClick={() => handleRating(strain.name, n)}
-                  className={ratings[strain.name] >= n ? 'text-yellow-500' : 'text-gray-400'}>
-                  ★
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
+                <div className="mt-2 flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => handleRating(strain.name, n)}
+                      className={ratings[strain.name] >= n ? 'text-yellow-500' : 'text-gray-300'}>
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          } catch (error) {
+            return (
+              <div key={`error-${idx}`} className="bg-red-100 p-4 rounded shadow">
+                <p className="text-red-600">⚠️ Error rendering strain card</p>
+              </div>
+            );
+          }
+        })}
       </div>
-    </main>
+    </div>
   );
 }
