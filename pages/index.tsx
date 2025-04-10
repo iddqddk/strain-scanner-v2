@@ -1,7 +1,9 @@
 // strain-scanner/pages/index.tsx
 import { useState, useEffect } from 'react';
+import Head from 'next/head';
 import type { GetStaticProps } from 'next';
 import { getStrains } from '@/lib/getStrains';
+import Image from 'next/image';
 
 interface Strain {
   name: string;
@@ -79,6 +81,10 @@ export default function Home({ strains }: { strains: Strain[] }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-100 to-white text-gray-800 p-4 space-y-6 max-w-xl mx-auto">
+      <Head>
+        <title>Strain Scanner</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
       <h1 className="text-3xl font-bold text-center">🌿 Strain Scanner</h1>
 
       <div className="bg-white p-4 rounded-xl shadow-md">
@@ -91,9 +97,11 @@ export default function Home({ strains }: { strains: Strain[] }) {
         />
 
         {image && (
-          <img
+          <Image
             src={image}
             alt="Plant preview"
+            width={400}
+            height={300}
             className="rounded-xl shadow w-full object-cover mb-4"
           />
         )}
@@ -114,53 +122,51 @@ export default function Home({ strains }: { strains: Strain[] }) {
       </div>
 
       <div className="space-y-4">
-        {results.map((strain, idx) => {
-          try {
+        {Array.isArray(results) && results.map((strain, idx) => {
+          if (!strain || typeof strain.name !== 'string') {
             return (
-              <div key={strain.name + idx} className="bg-white p-4 rounded-xl shadow-md">
-                <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-lg font-semibold">{strain.name || 'Unknown'}</h2>
-                  <button onClick={() => toggleFavorite(strain.name)}>
-                    {favorites.includes(strain.name) ? '💚' : '🤍'}
-                  </button>
-                </div>
-                <p className="text-sm text-gray-500 mb-1">{strain.type || 'Unknown Type'}</p>
-                <p className="text-sm"><strong>Flavors:</strong> {Array.isArray(strain.flavors) ? strain.flavors.join(', ') : 'N/A'}</p>
-                <p className="text-sm"><strong>Effects:</strong> {
-                  strain.effects
-                    ? Object.entries(strain.effects).map(([effect, value]) => `${effect} (${value})`).join(', ')
-                    : 'N/A'
-                }</p>
-                <p className="text-sm italic mt-1">{strain.description?.slice(0, 120) || 'No description available.'}</p>
-
-                <div className="mt-2">
-                  <textarea
-                    value={comments[strain.name] || ''}
-                    onChange={(e) => handleComment(strain.name, e.target.value)}
-                    placeholder="Write your comment..."
-                    className="w-full border p-1 rounded text-sm mt-2"
-                  />
-                </div>
-
-                <div className="mt-2 flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => handleRating(strain.name, n)}
-                      className={ratings[strain.name] >= n ? 'text-yellow-500' : 'text-gray-300'}>
-                      ★
-                    </button>
-                  ))}
-                </div>
-              </div>
-            );
-          } catch (error) {
-            return (
-              <div key={`error-${idx}`} className="bg-red-100 p-4 rounded shadow">
-                <p className="text-red-600">⚠️ Error rendering strain card</p>
+              <div key={`invalid-${idx}`} className="bg-red-100 p-4 rounded shadow">
+                <p className="text-red-700">⚠️ Invalid strain data</p>
               </div>
             );
           }
+
+          return (
+            <div key={strain.name + idx} className="bg-white p-4 rounded-xl shadow-md">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-lg font-semibold">{strain.name}</h2>
+                <button onClick={() => toggleFavorite(strain.name)}>
+                  {favorites.includes(strain.name) ? '💚' : '🤍'}
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mb-1">{strain.type || 'Unknown Type'}</p>
+              <p className="text-sm"><strong>Flavors:</strong> {Array.isArray(strain.flavors) ? strain.flavors.join(', ') : 'N/A'}</p>
+              <p className="text-sm"><strong>Effects:</strong> {
+                strain.effects
+                  ? Object.entries(strain.effects).map(([effect, value]) => `${effect} (${value})`).join(', ')
+                  : 'N/A'
+              }</p>
+              <p className="text-sm italic mt-1">{strain.description?.slice(0, 120) || 'No description available.'}</p>
+
+              <textarea
+                value={comments[strain.name] || ''}
+                onChange={(e) => handleComment(strain.name, e.target.value)}
+                placeholder="Write your comment..."
+                className="w-full border p-1 rounded text-sm mt-2"
+              />
+
+              <div className="mt-2 flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => handleRating(strain.name, n)}
+                    className={ratings[strain.name] >= n ? 'text-yellow-500' : 'text-gray-300'}>
+                    ★
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
         })}
       </div>
     </div>
