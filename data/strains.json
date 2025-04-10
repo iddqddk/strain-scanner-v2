@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Blue Dream",
+    "type": "Hybrid",
+    "effects": ["Euphoric", "Relaxed", "Happy"],
+    "flavors": ["Blueberry", "Sweet", "Berry"],
+    "description": "A sativa-dominant hybrid known for its balanced effects and sweet berry aroma."
+  },
+  {
+    "name": "OG Kush",
+    "type": "Indica",
+    "effects": ["Relaxed", "Happy", "Sleepy"],
+    "flavors": ["Earthy", "Pine", "Woody"],
+    "description": "A classic indica strain with strong sedative effects and earthy flavors."
+  }
+] 

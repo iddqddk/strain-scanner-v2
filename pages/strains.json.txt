@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Blue Dream",
+    "type": "Hybrid",
+    "effects": ["Happy", "Relaxed"],
+    "flavors": ["Berry", "Sweet"],
+    "description": "Blue Dream is a sativa-dominant hybrid with calming and creative effects."
+  },
+  {
+    "name": "OG Kush",
+    "type": "Indica",
+    "effects": ["Sleepy", "Hungry"],
+    "flavors": ["Earthy", "Pine"],
+    "description": "OG Kush is a legendary strain known for its heavy, calming effects."
+  }
+]
