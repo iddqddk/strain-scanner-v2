@@ -1,6 +1,6 @@
 // strain-scanner/pages/index.tsx
 import { useState, useEffect } from 'react';
-import strains from '../data/strains.json'; // Du skal lægge en JSON her senere
+import strains from '../data/leafly_strain_data.json';
 
 interface Strain {
   name: string;
