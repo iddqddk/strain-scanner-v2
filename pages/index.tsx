@@ -5,8 +5,8 @@ import strains from '../data/leafly_strain_data.json';
 interface Strain {
   name: string;
   type: string;
-  effects?: string[];
-  flavors?: string[];
+  effects?: any;
+  flavors?: any;
   description?: string;
 }
 
@@ -37,11 +37,14 @@ export default function Home() {
   };
 
   const handleSearch = () => {
-    const matches = strains.filter((strain: Strain) =>
-      strain.name.toLowerCase().includes(query.toLowerCase()) ||
-      strain.flavors?.some(flavor => flavor.toLowerCase().includes(query.toLowerCase()))
-    );
-    setResults(matches.slice(0, 5));
+    const normalizedQuery = query.toLowerCase();
+    const matches = strains.filter((strain: Strain) => {
+      const nameMatch = strain.name?.toLowerCase().includes(normalizedQuery);
+      const flavorMatch = Array.isArray(strain.flavors) && strain.flavors.some((f: string) => f.toLowerCase().includes(normalizedQuery));
+      const descriptionMatch = strain.description?.toLowerCase().includes(normalizedQuery);
+      return nameMatch || flavorMatch || descriptionMatch;
+    });
+    setResults(matches.slice(0, 15));
   };
 
   const toggleFavorite = (name: string) => {
@@ -82,7 +85,7 @@ export default function Home() {
         type="text"
         value={query}
         onChange={e => setQuery(e.target.value)}
-        placeholder="Enter strain name or flavor"
+        placeholder="Enter strain name, flavor, or description"
         className="border p-2 w-full rounded"
       />
       <button onClick={handleSearch} className="bg-green-600 text-white px-4 py-2 rounded">
@@ -99,8 +102,8 @@ export default function Home() {
               </button>
             </div>
             <p className="text-sm text-gray-500">{strain.type}</p>
-            <p><strong>Flavors:</strong> {strain.flavors?.join(', ')}</p>
-            <p><strong>Effects:</strong> {strain.effects?.join(', ')}</p>
+            <p><strong>Flavors:</strong> {Array.isArray(strain.flavors) ? strain.flavors.join(', ') : 'N/A'}</p>
+            <p><strong>Effects:</strong> {Array.isArray(strain.effects) ? strain.effects.join(', ') : 'N/A'}</p>
             <p className="text-sm italic">{strain.description?.slice(0, 120)}...</p>
 
             <div className="mt-2">
